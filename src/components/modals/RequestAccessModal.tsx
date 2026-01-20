@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Tool, User } from '../../lib/types';
-import { mockPrivilegeLevels, mockToolApprovers, mockApprovers } from '../../lib/mockData';
+import { Tool } from '../../lib/types';
+import { createAccessRequest } from '../../lib/api';
 import {
   Dialog,
   DialogContent,
@@ -19,46 +19,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Badge } from '../ui/badge';
 import { CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RequestAccessModalProps {
   tool: Tool;
-  currentUser: User;
   open: boolean;
   onClose: () => void;
 }
 
+const ACCESS_LEVELS = [
+  { id: 'read', name: 'Read', description: 'Read-only access' },
+  { id: 'write', name: 'Write', description: 'Read and write access' },
+  { id: 'admin', name: 'Admin', description: 'Full administrative access' },
+];
+
 export function RequestAccessModal({
   tool,
-  currentUser,
   open,
   onClose,
 }: RequestAccessModalProps) {
-  const [privilegeLevelId, setPrivilegeLevelId] = useState('');
+  const [accessLevel, setAccessLevel] = useState('');
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const privilegeLevels = mockPrivilegeLevels.filter((p) => p.toolId === tool.id);
-  const toolApproverIds = mockToolApprovers
-    .filter((ta) => ta.toolId === tool.id)
-    .map((ta) => ta.approverId);
-  const approvers = mockApprovers.filter((a) => toolApproverIds.includes(a.id));
+  const handleSubmit = async () => {
+    if (!accessLevel || !reason.trim()) return;
 
-  const handleSubmit = () => {
-    console.log('Submitting request:', {
-      toolId: tool.id,
-      privilegeLevelId,
-      reason,
-      userId: currentUser.id,
-    });
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setPrivilegeLevelId('');
-      setReason('');
-      onClose();
-    }, 2000);
+    try {
+      setSubmitting(true);
+      await createAccessRequest({
+        target_type: 'tool',
+        target_id: tool.id,
+        access_level: accessLevel,
+        reason: reason.trim(),
+      });
+
+      setSubmitted(true);
+      toast.success('Access request submitted successfully');
+
+      setTimeout(() => {
+        setSubmitted(false);
+        setAccessLevel('');
+        setReason('');
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to submit request:', error);
+      toast.error('Failed to submit access request');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -93,13 +105,13 @@ export function RequestAccessModal({
 
         <div className="space-y-5 py-4">
           <div className="space-y-2">
-            <Label htmlFor="privilege-level">Privilege Level</Label>
-            <Select value={privilegeLevelId} onValueChange={setPrivilegeLevelId}>
+            <Label htmlFor="privilege-level">Access Level</Label>
+            <Select value={accessLevel} onValueChange={setAccessLevel}>
               <SelectTrigger id="privilege-level">
-                <SelectValue placeholder="Select privilege level" />
+                <SelectValue placeholder="Select access level" />
               </SelectTrigger>
               <SelectContent>
-                {privilegeLevels.map((level) => (
+                {ACCESS_LEVELS.map((level) => (
                   <SelectItem key={level.id} value={level.id}>
                     <div className="flex flex-col gap-1">
                       <span>{level.name}</span>
@@ -123,28 +135,14 @@ export function RequestAccessModal({
               rows={4}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Approvers</Label>
-            <div className="bg-secondary/50 rounded-lg p-3 space-y-2">
-              {approvers.map((approver) => (
-                <div key={approver.id} className="flex items-center gap-2">
-                  <Badge variant={approver.type === 'group' ? 'default' : 'secondary'} className="text-xs">
-                    {approver.type}
-                  </Badge>
-                  <span className="text-sm">{approver.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!privilegeLevelId || !reason.trim()}>
-            Submit Request
+          <Button onClick={handleSubmit} disabled={!accessLevel || !reason.trim() || submitting}>
+            {submitting ? 'Submitting...' : 'Submit Request'}
           </Button>
         </DialogFooter>
       </DialogContent>

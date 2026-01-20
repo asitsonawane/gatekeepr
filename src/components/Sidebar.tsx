@@ -1,6 +1,6 @@
 import { User } from '../lib/types';
 import { Page } from './Dashboard';
-import { Shield, LayoutDashboard, Package, CheckCircle, Settings, Users, Layers } from 'lucide-react';
+import { Shield, LayoutDashboard, Package, CheckCircle, Settings, Users, Layers, FileText, ShieldCheck, ClipboardList } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
@@ -24,6 +24,12 @@ export function Sidebar({ currentUser, currentPage, onNavigate }: SidebarProps) 
       roles: ['user', 'approver', 'admin'],
     },
     {
+      id: 'access-requests' as Page,
+      label: 'Access Requests',
+      icon: ClipboardList,
+      roles: ['user', 'approver', 'admin'],
+    },
+    {
       id: 'approvals' as Page,
       label: 'Approvals',
       icon: CheckCircle,
@@ -33,18 +39,28 @@ export function Sidebar({ currentUser, currentPage, onNavigate }: SidebarProps) 
 
   const adminItems = [
     {
+      id: 'admin-roles' as Page,
+      label: 'Roles & Permissions',
+      icon: ShieldCheck,
+    },
+    {
+      id: 'admin-groups' as Page,
+      label: 'Groups',
+      icon: Users,
+    },
+    {
       id: 'admin-tools' as Page,
       label: 'Tools',
       icon: Layers,
     },
     {
-      id: 'admin-groups' as Page,
-      label: 'Groups & Users',
-      icon: Users,
+      id: 'admin-audit' as Page,
+      label: 'Audit Logs',
+      icon: FileText,
     },
   ];
 
-  const canAccess = (roles: string[]) => roles.includes(currentUser.role);
+  const canAccess = (roles: string[]) => currentUser.role ? roles.includes(currentUser.role) : false;
 
   return (
     <div className="w-64 border-r border-border bg-card flex flex-col">
@@ -54,7 +70,7 @@ export function Sidebar({ currentUser, currentPage, onNavigate }: SidebarProps) 
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-lg">AccessHub</h2>
+            <h2 className="text-lg">GateKeepr</h2>
           </div>
         </div>
       </div>

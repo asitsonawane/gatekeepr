@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Group } from '../../../lib/types';
-import { mockGroups, mockUsers } from '../../../lib/mockData';
+import { Group, User } from '../../../lib/types';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import {
@@ -19,6 +18,8 @@ import { Plus, Edit, Trash2, Users } from 'lucide-react';
 export function AdminGroupsPage() {
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [groups] = useState<Group[]>([]);
+  const [users] = useState<User[]>([]);
 
   const handleDeleteGroup = (groupId: string) => {
     console.log('Deleting group:', groupId);
@@ -62,12 +63,14 @@ export function AdminGroupsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockGroups.map((group) => {
-                  const members = mockUsers.filter((u) =>
-                    group.memberIds.includes(u.id)
-                  );
-
-                  return (
+                {groups.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      No groups found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  groups.map((group) => (
                     <TableRow key={group.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -80,16 +83,9 @@ export function AdminGroupsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {members.map((member) => (
-                            <Badge key={member.id} variant="secondary" className="text-xs">
-                              {member.name}
-                            </Badge>
-                          ))}
-                          {members.length === 0 && (
-                            <span className="text-sm text-muted-foreground">
-                              No members
-                            </span>
-                          )}
+                          <span className="text-sm text-muted-foreground">
+                            No members
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -112,8 +108,8 @@ export function AdminGroupsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -132,12 +128,14 @@ export function AdminGroupsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockUsers.map((user) => {
-                  const userGroups = mockGroups.filter((g) =>
-                    g.memberIds.includes(user.id)
-                  );
-
-                  return (
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.name}</TableCell>
                       <TableCell className="text-muted-foreground">
@@ -149,8 +147,8 @@ export function AdminGroupsPage() {
                             user.role === 'admin'
                               ? 'default'
                               : user.role === 'approver'
-                              ? 'secondary'
-                              : 'outline'
+                                ? 'secondary'
+                                : 'outline'
                           }
                         >
                           {user.role}
@@ -158,14 +156,7 @@ export function AdminGroupsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {userGroups.map((group) => (
-                            <Badge key={group.id} variant="outline" className="text-xs">
-                              {group.name}
-                            </Badge>
-                          ))}
-                          {userGroups.length === 0 && (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
+                          <span className="text-sm text-muted-foreground">-</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -179,8 +170,8 @@ export function AdminGroupsPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

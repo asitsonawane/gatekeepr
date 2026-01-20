@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { mockUsers, mockGroups } from '../../../lib/mockData';
+import { User } from '../../../lib/types';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import {
@@ -13,6 +13,8 @@ import {
 import { Edit, Trash2 } from 'lucide-react';
 
 export function AdminUsersPage() {
+  const [users] = useState<User[]>([]);
+
   const handleDeleteUser = (userId: string) => {
     console.log('Deleting user:', userId);
   };
@@ -36,12 +38,14 @@ export function AdminUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockUsers.map((user) => {
-              const userGroups = mockGroups.filter((g) =>
-                g.memberIds.includes(user.id)
-              );
-
-              return (
+            {users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No users found
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.name}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -53,8 +57,8 @@ export function AdminUsersPage() {
                         user.role === 'admin'
                           ? 'default'
                           : user.role === 'approver'
-                          ? 'secondary'
-                          : 'outline'
+                            ? 'secondary'
+                            : 'outline'
                       }
                     >
                       {user.role}
@@ -62,14 +66,7 @@ export function AdminUsersPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {userGroups.map((group) => (
-                        <Badge key={group.id} variant="outline" className="text-xs">
-                          {group.name}
-                        </Badge>
-                      ))}
-                      {userGroups.length === 0 && (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
+                      <span className="text-sm text-muted-foreground">-</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -88,8 +85,8 @@ export function AdminUsersPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              );
-            })}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

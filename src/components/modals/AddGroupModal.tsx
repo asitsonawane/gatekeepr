@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { mockUsers } from '../../lib/mockData';
+import { User } from '../../lib/types';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ export function AddGroupModal({ open, onClose }: AddGroupModalProps) {
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [users] = useState<User[]>([]);
 
   const toggleMember = (userId: string) => {
     setSelectedMembers((prev) =>
@@ -70,22 +71,26 @@ export function AddGroupModal({ open, onClose }: AddGroupModalProps) {
           <div className="space-y-2">
             <Label>Add Members</Label>
             <div className="border border-border rounded-lg p-4 space-y-3 max-h-64 overflow-y-auto">
-              {mockUsers.map((user) => (
-                <div key={user.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`user-${user.id}`}
-                    checked={selectedMembers.includes(user.id)}
-                    onCheckedChange={() => toggleMember(user.id)}
-                  />
-                  <label
-                    htmlFor={`user-${user.id}`}
-                    className="flex-1 cursor-pointer"
-                  >
-                    <p className="text-sm">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </label>
-                </div>
-              ))}
+              {users.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No users found</p>
+              ) : (
+                users.map((user) => (
+                  <div key={user.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`user-${user.id}`}
+                      checked={selectedMembers.includes(user.id)}
+                      onCheckedChange={() => toggleMember(user.id)}
+                    />
+                    <label
+                      htmlFor={`user-${user.id}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <p className="text-sm">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </label>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

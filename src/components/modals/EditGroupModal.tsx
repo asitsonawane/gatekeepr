@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Group } from '../../lib/types';
-import { mockUsers } from '../../lib/mockData';
+import { Group, User } from '../../lib/types';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +24,7 @@ export function EditGroupModal({ group, open, onClose }: EditGroupModalProps) {
   const [groupName, setGroupName] = useState(group.name);
   const [description, setDescription] = useState(group.description);
   const [selectedMembers, setSelectedMembers] = useState<string[]>(group.memberIds);
+  const [users] = useState<User[]>([]);
 
   useEffect(() => {
     setGroupName(group.name);
@@ -79,22 +79,26 @@ export function EditGroupModal({ group, open, onClose }: EditGroupModalProps) {
           <div className="space-y-2">
             <Label>Members</Label>
             <div className="border border-border rounded-lg p-4 space-y-3 max-h-64 overflow-y-auto">
-              {mockUsers.map((user) => (
-                <div key={user.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`user-${user.id}`}
-                    checked={selectedMembers.includes(user.id)}
-                    onCheckedChange={() => toggleMember(user.id)}
-                  />
-                  <label
-                    htmlFor={`user-${user.id}`}
-                    className="flex-1 cursor-pointer"
-                  >
-                    <p className="text-sm">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </label>
-                </div>
-              ))}
+              {users.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No users found</p>
+              ) : (
+                users.map((user) => (
+                  <div key={user.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`user-${user.id}`}
+                      checked={selectedMembers.includes(user.id)}
+                      onCheckedChange={() => toggleMember(user.id)}
+                    />
+                    <label
+                      htmlFor={`user-${user.id}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <p className="text-sm">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </label>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

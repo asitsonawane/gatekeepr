@@ -6,21 +6,27 @@ import { MyToolsPage } from './pages/MyToolsPage';
 import { ToolCatalogPage } from './pages/ToolCatalogPage';
 import { ApprovalsPage } from './pages/ApprovalsPage';
 import { AdminToolsPage } from './pages/admin/AdminToolsPage';
-import { AdminGroupsPage } from './pages/admin/AdminGroupsPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
+import { RolesManagement } from './admin/RolesManagement';
+import { GroupsManagement } from './admin/GroupsManagement';
+import { AuditLogs } from './admin/AuditLogs';
+import { AccessRequestsPanel } from './pages/AccessRequestsPanel';
 
 interface DashboardProps {
   currentUser: User;
   onLogout: () => void;
 }
 
-export type Page = 
-  | 'my-tools' 
-  | 'catalog' 
-  | 'approvals' 
-  | 'admin-tools' 
-  | 'admin-groups' 
-  | 'admin-users';
+export type Page =
+  | 'my-tools'
+  | 'catalog'
+  | 'approvals'
+  | 'access-requests'
+  | 'admin-tools'
+  | 'admin-groups'
+  | 'admin-users'
+  | 'admin-roles'
+  | 'admin-audit';
 
 export function Dashboard({ currentUser, onLogout }: DashboardProps) {
   const [currentPage, setCurrentPage] = useState<Page>('my-tools');
@@ -30,15 +36,21 @@ export function Dashboard({ currentUser, onLogout }: DashboardProps) {
       case 'my-tools':
         return <MyToolsPage currentUser={currentUser} />;
       case 'catalog':
-        return <ToolCatalogPage currentUser={currentUser} />;
+        return <ToolCatalogPage />;
       case 'approvals':
-        return <ApprovalsPage currentUser={currentUser} />;
+        return <ApprovalsPage />;
+      case 'access-requests':
+        return <AccessRequestsPanel />;
       case 'admin-tools':
         return <AdminToolsPage />;
       case 'admin-groups':
-        return <AdminGroupsPage />;
+        return <GroupsManagement />;
       case 'admin-users':
         return <AdminUsersPage />;
+      case 'admin-roles':
+        return <RolesManagement />;
+      case 'admin-audit':
+        return <AuditLogs />;
       default:
         return <MyToolsPage currentUser={currentUser} />;
     }

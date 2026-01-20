@@ -1,33 +1,78 @@
-import { useState } from 'react';
-import { User, Tool } from '../../lib/types';
-import { mockTools, mockUserAccess } from '../../lib/mockData';
+import { useState, useEffect } from 'react';
+import { Tool } from '../../lib/types';
+import { listTools, getMyRequests } from '../../lib/api';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { RequestAccessModal } from '../modals/RequestAccessModal';
-import { Search, CheckCircle } from 'lucide-react';
+import { Search, CheckCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface ToolCatalogPageProps {
-  currentUser: User;
-}
+interface ToolCatalogPageProps { }
 
-export function ToolCatalogPage({ currentUser }: ToolCatalogPageProps) {
+export function ToolCatalogPage({ }: ToolCatalogPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [tools, setTools] = useState<Tool[]>([]);
+  const [userAccessToolIds, setUserAccessToolIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const userAccessToolIds = mockUserAccess
-    .filter((access) => access.userId === currentUser.id && access.status === 'active')
-    .map((access) => access.toolId);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const filteredTools = mockTools.filter((tool) => {
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [toolsData, requests] = await Promise.all([
+        listTools(),
+        getMyRequests()
+      ]);
+
+      const safeTools = toolsData || [];
+      const safeRequests = requests || [];
+
+      setTools(safeTools);
+
+      // Get tool IDs from approved requests
+      const approvedToolIds = safeRequests
+        .filter(req => req.status === 'APPROVED' && req.target_type === 'tool')
+        .map(req => req.target_id);
+
+      setUserAccessToolIds(approvedToolIds);
+    } catch (error) {
+      console.error('Failed to load tools:', error);
+      toast.error('Failed to load tools catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredTools = tools.filter((tool) => {
     const matchesSearch =
       tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.environment.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (tool.environment?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (tool.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
-  const hasAccess = (toolId: string) => userAccessToolIds.includes(toolId);
+  const hasAccess = (toolId: number) => userAccessToolIds.includes(toolId);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1>Tool Catalog</h1>
+          <p className="text-muted-foreground mt-1">Browse and request access to tools</p>
+        </div>
+
+        <div className="border border-border rounded-lg bg-card p-12 flex flex-col items-center justify-center text-center">
+          <Loader2 className="w-12 h-12 text-muted-foreground mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading tools...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,7 +149,6 @@ export function ToolCatalogPage({ currentUser }: ToolCatalogPageProps) {
       {selectedTool && (
         <RequestAccessModal
           tool={selectedTool}
-          currentUser={currentUser}
           open={!!selectedTool}
           onClose={() => setSelectedTool(null)}
         />

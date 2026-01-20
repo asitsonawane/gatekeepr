@@ -4,6 +4,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Shield } from 'lucide-react';
+import { login } from '../lib/api';
+import { toast } from 'sonner';
 
 interface LoginProps {
   onLogin: (email: string) => void;
@@ -12,11 +14,24 @@ interface LoginProps {
 export function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
+    if (!email || !password) return;
+
+    setLoading(true);
+    try {
+      const { roles } = await login(email, password);
+      // Token is now stored in HTTP-only cookie by the backend
+      // Only store roles in localStorage for UI purposes
+      localStorage.setItem('roles', JSON.stringify(roles));
       onLogin(email);
+      toast.success('Logged in successfully');
+    } catch (error) {
+      toast.error('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,10 +43,10 @@ export function Login({ onLogin }: LoginProps) {
             <div className="p-2.5 bg-primary rounded-lg">
               <Shield className="w-7 h-7 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl">AccessHub</h1>
+            <h1 className="text-3xl">GateKeepr</h1>
           </div>
-          <p className="text-muted-foreground text-center">
-            Manage tool access across your organization
+          <p className="text-amuted-foreground text-center">
+            Manage access for your internal apps and tools  across your organization
           </p>
         </div>
 
@@ -66,14 +81,12 @@ export function Login({ onLogin }: LoginProps) {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
-            <div className="mt-6 text-center text-xs text-muted-foreground">
-              Demo: Use any email and password to sign in
-            </div>
+
+
           </CardContent>
         </Card>
       </div>
